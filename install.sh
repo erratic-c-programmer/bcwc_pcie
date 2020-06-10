@@ -27,7 +27,7 @@ if [ ! -f /usr/lib/firmware/facetimehd/firmware.bin ]; then
   popd > /dev/null
 fi
 
-(cd $srcdir; git clone -b clean-code $url $pkgname)
+(cd $srcdir; git clone -b code-clean $url $pkgname)
 
 pushd $srcdir/$pkgname/ > /dev/null
 for FILE in dkms.conf Makefile *.[ch]; do
