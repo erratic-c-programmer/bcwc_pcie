@@ -110,7 +110,6 @@ u32 fthd_channel_ringbuf_receive(struct fthd_private *dev_priv,
 	u32 entry, ret = (u32)-1;
 
 	spin_lock_irq(&chan->lock);
-
 	entry = get_entry_addr(chan, chan->ringbuf.idx);
 
 
