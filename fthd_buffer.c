@@ -51,16 +51,16 @@ struct iommu_obj *iommu_allocate_sgtable(struct fthd_private *dev_priv, struct s
 	int ret, i, pos;
 	int total_len = 0, dma_length;
 	dma_addr_t dma_addr;
-	
+
 	for(i = 0; i < sgtable->nents; i++)
 		total_len += sg_dma_len(sgtable->sgl + i);
-	
+
 	if (!total_len)
 		return NULL;
 
 	total_len += 4095;
 	total_len /= 4096;
-	
+
 	obj = kzalloc(sizeof(struct iommu_obj), GFP_KERNEL);
 	if (!obj)
 		return NULL;
@@ -87,7 +87,7 @@ struct iommu_obj *iommu_allocate_sgtable(struct fthd_private *dev_priv, struct s
 		dma_addr = sg_dma_address(sg);
 		WARN_ON(dma_addr & 0xfff);
 		dma_addr >>= 12;
-		
+
 		for(dma_length = 0; dma_length < sg_dma_len(sg); dma_length += 0x1000) {
 		  //			pr_debug("IOMMU %08x -> %08llx (dma length %d)\n", pos, dma_addr, dma_length);
 			FTHD_S2_REG_WRITE(dma_addr++, pos);
@@ -106,7 +106,7 @@ void iommu_free(struct fthd_private *dev_priv, struct iommu_obj *obj)
 
 	if (!obj)
 		return;
-	
+
  	for (i = obj->offset; i < obj->offset + obj->size; i++)
 		FTHD_S2_REG_WRITE(0, 0x9000 + i * 4);
 
@@ -115,7 +115,7 @@ void iommu_free(struct fthd_private *dev_priv, struct iommu_obj *obj)
 	obj = NULL;
 }
 
-static void iommu_allocator_destroy(struct fthd_private *dev_priv)
+static inline void iommu_allocator_destroy(struct fthd_private *dev_priv)
 {
 	kfree(dev_priv->iommu);
 }
