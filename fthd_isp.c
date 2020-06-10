@@ -1305,14 +1305,14 @@ int isp_init(struct fthd_private *dev_priv)
 	for (retries = 0; retries < 1000; retries++) {
 		reg = FTHD_ISP_REG_READ(ISP_IRQ_STATUS);
 		if ((reg & 0xf0) > 0)
-			break;
+			goto tried1;
 		mdelay(10);
 	}
 
-	if (retries >= 1000) {
-		dev_info(&dev_priv->pdev->dev, "Init failed! No wake signal\n");
-		return -EIO;
-	}
+	dev_info(&dev_priv->pdev->dev, "Init failed! No wake signal\n");
+	return -EIO;
+
+tried1:;;
 
 	dev_info(&dev_priv->pdev->dev, "ISP woke up after %dms\n",
 		 (retries - 1) * 10);
@@ -1396,14 +1396,15 @@ int isp_init(struct fthd_private *dev_priv)
 		for (retries = 0; retries < 1000; retries++) {
 			reg = FTHD_ISP_REG_READ(ISP_IRQ_STATUS);
 			if ((reg & 0xf0) > 0)
-				break;
+				goto tried2;
 			mdelay(10);
 		}
 
-		if (retries >= 1000) {
-			dev_info(&dev_priv->pdev->dev, "Init failed! No second int\n");
-			return -EIO;
-		} /* FIXME: free on error path */
+		dev_info(&dev_priv->pdev->dev, "Init failed! No second int\n");
+		return -EIO;
+		/* FIXME: free on error path */
+
+tried2:;;
 
 		dev_info(&dev_priv->pdev->dev, "ISP second int after %dms\n",
 			 (retries - 1) * 10);
@@ -1427,15 +1428,17 @@ int isp_init(struct fthd_private *dev_priv)
 		for (retries = 0; retries < 1000; retries++) {
 			reg = FTHD_ISP_REG_READ(ISP_FW_HEAP_SIZE);
 			if (!reg)
-				break;
+				goto tried3;
 			mdelay(10);
 		}
 
-		if (retries >= 1000) {
-			dev_info(&dev_priv->pdev->dev, "Init failed! No magic value\n");
-			isp_uninit(dev_priv);
-			return -EIO;
-		} /* FIXME: free on error path */
+		dev_info(&dev_priv->pdev->dev, "Init failed! No magic value\n");
+		isp_uninit(dev_priv);
+		return -EIO;
+		/* FIXME: free on error path */
+
+tried3:;;
+
 		dev_info(&dev_priv->pdev->dev, "magic value: %08x after %d ms\n", reg, (retries - 1) * 10);
 	}
 
