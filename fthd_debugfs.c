@@ -26,6 +26,8 @@
 #include "fthd_ringbuf.h"
 #include "fthd_hw.h"
 
+#define STREQ(a, b) !strcmp((a), (b))
+
 static ssize_t fthd_store_debug(struct file *file, const char __user *user_buf,
 				size_t count, loff_t *ppos)
 
@@ -44,27 +46,27 @@ static ssize_t fthd_store_debug(struct file *file, const char __user *user_buf,
 
 	memset(&cmd, 0, sizeof(cmd));
 
-	if (!strcmp(buf, "ps"))
+	if (STREQ(buf, "ps"))
 		opcode = CISP_CMD_DEBUG_PS;
-	else if (!strcmp(buf, "banner"))
+	else if (STREQ(buf, "banner"))
 		opcode = CISP_CMD_DEBUG_BANNER;
-	else if (!strcmp(buf, "get_root"))
+	else if (STREQ(buf, "get_root"))
 		opcode = CISP_CMD_DEBUG_GET_ROOT_HANDLE;
-	else if (!strcmp(buf, "heap"))
+	else if (STREQ(buf, "heap"))
 		opcode = CISP_CMD_DEBUG_HEAP_STATISTICS;
-	else if (!strcmp(buf, "irq"))
+	else if (STREQ(buf, "irq"))
 		opcode = CISP_CMD_DEBUG_IRQ_STATISTICS;
-	else if (!strcmp(buf, "semaphore"))
+	else if (STREQ(buf, "semaphore"))
 		opcode = CISP_CMD_DEBUG_SHOW_SEMAPHORE_STATUS;
-	else if (!strcmp(buf, "wiring"))
+	else if (STREQ(buf, "wiring"))
 		opcode = CISP_CMD_DEBUG_SHOW_WIRING_OPERATIONS;
 	else if (sscanf(buf, "get_object_by_name %s", (char *)&cmd.arg) == 1)
 		opcode = CISP_CMD_DEBUG_GET_OBJECT_BY_NAME;
 	else if (sscanf(buf, "dump_object %x", &cmd.arg[0]) == 1)
 		opcode = CISP_CMD_DEBUG_DUMP_OBJECT;
-	else if (!strcmp(buf, "dump_objects"))
+	else if (STREQ(buf, "dump_objects"))
 		opcode = CISP_CMD_DEBUG_DUMP_ALL_OBJECTS;
-	else if (!strcmp(buf, "show_objects"))
+	else if (STREQ(buf, "show_objects"))
 		opcode = CISP_CMD_DEBUG_SHOW_OBJECT_GRAPH;
 	else if (sscanf(buf, "get_debug_level %i", &cmd.arg[0]) == 1)
 		opcode = CISP_CMD_DEBUG_GET_DEBUG_LEVEL;
@@ -72,7 +74,7 @@ static ssize_t fthd_store_debug(struct file *file, const char __user *user_buf,
 		opcode = CISP_CMD_DEBUG_SET_DEBUG_LEVEL;
 	else if (sscanf(buf, "set_debug_level_rec %x %i", &cmd.arg[0], &cmd.arg[1]) == 2)
 		opcode = CISP_CMD_DEBUG_SET_DEBUG_LEVEL_RECURSIVE;
-	else if (!strcmp(buf, "get_fsm_count"))
+	else if (STREQ(buf, "get_fsm_count"))
 		opcode = CISP_CMD_DEBUG_GET_FSM_COUNT;
 	else if (sscanf(buf, "get_fsm_by_name %s", (char *)&cmd.arg[0]) == 1)
 		opcode = CISP_CMD_DEBUG_GET_FSM_BY_NAME;
@@ -103,12 +105,12 @@ static int seq_channel_read(struct seq_file *seq, struct fthd_private *dev_priv,
 	u32 entry;
 
 	spin_lock_irq(&chan->lock);
-	for( i = 0; i < chan->size; i++) {
+	for (i = 0; i < chan->size; i++) {
 		if (chan->ringbuf.idx == i)
 			pos = '*';
 		else
 			pos = ' ';
-		entry = get_entry_addr(dev_priv, chan, i);
+		entry = get_entry_addr(chan, i);
 		seq_printf(seq, "%c%3.3d: ADDRESS %08x REQUEST_SIZE %08x RESPONSE_SIZE %08x\n",
 			   pos, i,
 			   FTHD_S2_MEM_READ(entry + FTHD_RINGBUF_ADDRESS_FLAGS),
@@ -119,49 +121,49 @@ static int seq_channel_read(struct seq_file *seq, struct fthd_private *dev_priv,
 	return 0;
 }
 
-static int seq_channel_terminal_read(struct seq_file *seq, void *data)
+static inline int seq_channel_terminal_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_terminal);
 }
 
-static int seq_channel_sharedmalloc_read(struct seq_file *seq, void *data)
+static inline int seq_channel_sharedmalloc_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_shared_malloc);
 }
 
-static int seq_channel_io_read(struct seq_file *seq, void *data)
+static inline int seq_channel_io_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_io);
 }
 
-static int seq_channel_io_t2h_read(struct seq_file *seq, void *data)
+static inline int seq_channel_io_t2h_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_io_t2h);
 }
 
-static int seq_channel_buf_h2t_read(struct seq_file *seq, void *data)
+static inline int seq_channel_buf_h2t_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_buf_h2t);
 }
 
-static int seq_channel_buf_t2h_read(struct seq_file *seq, void *data)
+static inline int seq_channel_buf_t2h_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);
 	return seq_channel_read(seq, dev_priv, dev_priv->channel_buf_t2h);
 }
 
-static int seq_channel_debug_read(struct seq_file *seq, void *data)
+static inline int seq_channel_debug_read(struct seq_file *seq, void *data)
 
 {
 	struct fthd_private *dev_priv = dev_get_drvdata(seq->private);

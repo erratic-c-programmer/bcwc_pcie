@@ -8,7 +8,7 @@ fi
 
 pkgname=bcwc-pcie
 pkgver=r245.82626d4
-url="https://github.com/patjak/bcwc_pcie"
+url="https://github.com/erratic-c-programmer/bcwc_pcie"
 fwurl="https://github.com/patjak/facetimehd-firmware"
 fwname=facetimehd-firmware
 srcdir=src
@@ -27,7 +27,7 @@ if [ ! -f /usr/lib/firmware/facetimehd/firmware.bin ]; then
   popd > /dev/null
 fi
 
-(cd $srcdir; git clone $url $pkgname)
+(cd $srcdir; git clone -b clean-code $url $pkgname)
 
 pushd $srcdir/$pkgname/ > /dev/null
 for FILE in dkms.conf Makefile *.[ch]; do

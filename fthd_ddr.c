@@ -186,14 +186,14 @@ static int fthd_ddr_calibrate_one_re_fifo(struct fthd_private *dev_priv,
 			if (bl_pass[0] == 0)
 				bl_pass[0] = 1;
 			else
-				goto passed;
+				goto passed1;
 		}
 
 		if (fifo_status[1] == 0) {
 			if (bl_pass[1] == 0)
 				bl_pass[1] = 1;
 			else
-				goto passed;
+				goto passed1;
 		}
 
 		/* Still not passed */
@@ -215,15 +215,15 @@ static int fthd_ddr_calibrate_one_re_fifo(struct fthd_private *dev_priv,
 			}
 		}
 	}
-passed:;;
+
+passed1:;;
 
 	wl_start = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE) & 0x3f;
 
 	if (bl_pass[0] == 1) {
 		bl_start[0] = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE0) & 0x3f;
-		passed = 0;
 
-		while (passed == 0) {
+		for (;;) {
 			byte_setting++;
 			if (byte_setting > 64) {
 				dev_err(&dev_priv->pdev->dev,
@@ -244,16 +244,16 @@ passed:;;
 			FTHD_S2_REG_WRITE(1, S2_DDR40_WL_READ_FIFO_CLEAR);
 
 			if (fifo_status[1] == 0)
-				passed = 1;
+				goto passed2;
 		}
-
+passed2:;;
 		bl_start[1] = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE1) & 0x3f;
 	}
+
 	if (bl_pass[1] == 1) {
 		bl_start[1] = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE1) & 0x3f;
-		passed = 0;
 
-		while (passed == 0) {
+		for (;;) {
 			byte_setting++;
 			if (byte_setting > 64) {
 				dev_err(&dev_priv->pdev->dev,
@@ -273,9 +273,9 @@ passed:;;
 			FTHD_S2_REG_WRITE(1, S2_DDR40_WL_READ_FIFO_CLEAR);
 
 			if (fifo_status[0] == 0)
-				passed = 1;
+				goto passed3;
 		}
-
+passed3:;;
 		bl_start[0] = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE0) & 0x3f;
 	}
 
