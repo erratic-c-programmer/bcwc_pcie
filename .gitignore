@@ -13,3 +13,4 @@ doc-pak
 *.deb
 *.tgz
 src
+.fthd_ddr.o.d
