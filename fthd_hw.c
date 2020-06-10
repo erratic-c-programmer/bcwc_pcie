@@ -202,10 +202,11 @@ static int fthd_hw_ddr_phy_soft_reset(struct fthd_private *dev_priv)
 static inline int fthd_hw_ddr_status_busy(struct fthd_private *dev_priv,
 					  int retries, int delay)
 {
-	int i;
+	int i, reg;
 
 	for (i = 0; i < retries; i++) {
-		if (!(FTHD_S2_REG_READ(S2_DDR_STATUS_2018) & S2_DDR_STATUS_BUSY))
+		reg = FTHD_S2_REG_READ(S2_DDR_STATUS_2018);
+		if (!(reg & S2_DDR_STATUS_BUSY))
 			goto end;
 		udelay(delay);
 	}
