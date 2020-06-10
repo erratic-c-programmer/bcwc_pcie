@@ -157,7 +157,7 @@ static int fthd_ddr_calibrate_one_re_fifo(struct fthd_private *dev_priv,
 	u32 wl_start;
 	u32 bl_pass[2] = {0, 0};
 	u32 bl_start[2] = {0, 0};
-	u32 word_setting, byte_setting, passed, delta;
+	u32 word_setting, byte_setting, delta;
 	u32 tmp;
 
 	delta = ((FTHD_S2_REG_READ(S2_DDR40_PHY_VDL_STATUS) & 0xffc) >> 2) / 4;
@@ -173,16 +173,12 @@ static int fthd_ddr_calibrate_one_re_fifo(struct fthd_private *dev_priv,
 
 	word_setting = 0;
 	byte_setting = 0;
-	passed = 0;
 
-	while (passed == 0) {
+	for (;;) {
 		fthd_ddr_verify_mem(dev_priv, 0, MEM_VERIFY_NUM);
 
-		fifo_status[0] =
-			FTHD_S2_REG_READ(S2_DDR40_WL_READ_FIFO_STATUS) & 0xf;
-		fifo_status[1] =
-			(FTHD_S2_REG_READ(S2_DDR40_WL_READ_FIFO_STATUS) &
-			 0xf0) >> 4;
+		fifo_status[0] = FTHD_S2_REG_READ(S2_DDR40_WL_READ_FIFO_STATUS) & 0xf;
+		fifo_status[1] = (FTHD_S2_REG_READ(S2_DDR40_WL_READ_FIFO_STATUS) & 0xf0) >> 4;
 
 		FTHD_S2_REG_WRITE(1, S2_DDR40_WL_READ_FIFO_CLEAR);
 
@@ -190,37 +186,36 @@ static int fthd_ddr_calibrate_one_re_fifo(struct fthd_private *dev_priv,
 			if (bl_pass[0] == 0)
 				bl_pass[0] = 1;
 			else
-				passed = 1;
+				goto passed;
 		}
 
 		if (fifo_status[1] == 0) {
 			if (bl_pass[1] == 0)
 				bl_pass[1] = 1;
 			else
-				passed = 1;
+				goto passed;
 		}
 
 		/* Still not passed */
-		if (passed == 0) {
-			if (word_setting < 63) {
-				word_setting++;
-				FTHD_S2_REG_WRITE(0x30000 | (word_setting & 0x3f),
-						  S2_DDR40_RDEN_BYTE);
-			} else {
-				byte_setting++;
-				FTHD_S2_REG_WRITE(0x30100 | (byte_setting & 0x3f),
-						  S2_DDR40_RDEN_BYTE0);
-				FTHD_S2_REG_WRITE(0x30100 | (byte_setting & 0x3f),
-						  S2_DDR40_RDEN_BYTE1);
+		if (word_setting < 63) {
+			word_setting++;
+			FTHD_S2_REG_WRITE(0x30000 | (word_setting & 0x3f),
+					  S2_DDR40_RDEN_BYTE);
+		} else {
+			byte_setting++;
+			FTHD_S2_REG_WRITE(0x30100 | (byte_setting & 0x3f),
+					  S2_DDR40_RDEN_BYTE0);
+			FTHD_S2_REG_WRITE(0x30100 | (byte_setting & 0x3f),
+					  S2_DDR40_RDEN_BYTE1);
 
-				if (word_setting > 64) {
-					dev_err(&dev_priv->pdev->dev,
-						"RDEN byte timeout\n");
-					return -EIO;
-				}
+			if (word_setting > 64) {
+				dev_err(&dev_priv->pdev->dev,
+					"RDEN byte timeout\n");
+				return -EIO;
 			}
 		}
 	}
+passed:;;
 
 	wl_start = FTHD_S2_REG_READ(S2_DDR40_RDEN_BYTE) & 0x3f;
 
