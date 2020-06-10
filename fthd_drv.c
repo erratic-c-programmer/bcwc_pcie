@@ -242,13 +242,13 @@ static void fthd_irq_work(struct work_struct *work)
 	u32 pending;
 	int i = 0;
 
-	while(i++ < 500) {
+	while (i++ < 500) {
 		spin_lock_irq(&dev_priv->io_lock);
 		pending = FTHD_ISP_REG_READ(ISP_IRQ_STATUS);
 		spin_unlock_irq(&dev_priv->io_lock);
 
 		if (!(pending & 0xf0))
-			break;
+			goto end;
 
 		pci_write_config_dword(dev_priv->pdev, 0x94, 0);
 		spin_lock_irq(&dev_priv->io_lock);
@@ -267,10 +267,11 @@ static void fthd_irq_work(struct work_struct *work)
 		}
 	}
 
-	if (i >= 500) {
-		dev_err(&dev_priv->pdev->dev, "irq stuck, disabling\n");
-		fthd_irq_uninstall(dev_priv);
-	}
+	dev_err(&dev_priv->pdev->dev, "irq stuck, disabling\n");
+	fthd_irq_uninstall(dev_priv);
+
+end:;;
+
 	pci_write_config_dword(dev_priv->pdev, 0x94, 0x200);
 }
 
