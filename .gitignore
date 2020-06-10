@@ -14,3 +14,4 @@ doc-pak
 *.tgz
 src
 .fthd_ddr.o.d
+test.sh
