@@ -1,22 +1,23 @@
 #! /bin/bash
-# Some inspiration from the AUR pkgbuild
 
+# Permission check
 if [ ! $(whoami) = root ]; then
   echo 'You must be root to run this script.'
   exit 13
 fi
 
+# Vars
 pkgname=bcwc-pcie
-pkgver=r245.82626d4
-url="https://github.com/erratic-c-programmer/bcwc_pcie"
+pkgver=git
 fwurl="https://github.com/patjak/facetimehd-firmware"
 fwname=facetimehd-firmware
 srcdir=src
 
+# Create src
 rm -rf ${srcdir}
-
 mkdir $srcdir
 
+# Check for facetimehd firmware
 if [ ! -f /usr/lib/firmware/facetimehd/firmware.bin ]; then
   echo 'WARNING: Requires facetimehd-firmware, but it was not found. Installing it for you...'
   (cd src; git clone $fwurl $fwname)
@@ -27,9 +28,6 @@ if [ ! -f /usr/lib/firmware/facetimehd/firmware.bin ]; then
   popd > /dev/null
 fi
 
-(cd $srcdir; git clone -b code-clean $url $pkgname)
-
-pushd $srcdir/$pkgname/ > /dev/null
 for FILE in dkms.conf Makefile *.[ch]; do
   install -Dm 644 "$FILE" "/usr/src/${pkgname}-${pkgver}/$FILE"
 done
